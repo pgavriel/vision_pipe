@@ -1,0 +1,34 @@
+{
+  "config": {
+    "input_root": "C:/Users/nullp/Projects/vision_pipe/input",
+    "input_type": "image",
+    "input_source": "im_test.jpg",
+    
+    "output_root": "C:/Users/nullp/Projects/vision_pipe/output",
+    "output_label": "processed",
+    "output_size": [640, 480],
+    "save_step_images": false,
+    "numbered_files": false,
+
+    "visualize": true,
+    "window_name": "Pipe Test",
+    "framerate": 30
+  },
+  "pipe_config": {
+    "load_from_file": false,
+    "pipe": [
+    { "name": "GaussianBlur", "params": { "ksize": 7, "output_file": null}},
+    { "name": "Threshold", "params": { "thresh": 100, "max_val": 255, "output_file":"thresh.png"}},
+    { "name": "GaussianBlur", "params": { "ksize": 7 }},
+    { "name": "Colorize", "params": { "colormap": "plasma", "output_file": "color.png"}},
+    {
+    "name": "Resize",
+    "params": {
+        "size": [640, 480],
+        "keep_aspect": true,
+        "pad_color": [0, 0, 0], 
+        "output_file": "rs2.png"}
+    }
+  ]
+  }
+}
