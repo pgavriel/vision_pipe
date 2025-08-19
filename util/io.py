@@ -6,6 +6,44 @@ from os.path import join
 import re
 from pathlib import Path
 
+import tkinter as tk
+from tkinter import filedialog
+
+def file_dialog(mode="open", initial_dir=".", filetypes=(("All files", "*.*"),), title="Select a file", defaultextension=None):
+    """
+    Opens a file dialog for opening or saving files.
+
+    Parameters:
+        mode (str): "open" for selecting an existing file, "save" for choosing a file to save.
+        filetypes (tuple): List of (label, pattern) tuples for filtering file types.
+        title (str): Dialog window title.
+        defaultextension (str): Default extension for saving files (e.g., ".txt").
+
+    Returns:
+        str or None: Selected file path, or None if canceled.
+    """
+    root = tk.Tk()
+    root.withdraw()  # Hide main window
+
+    if mode == "open":
+        return filedialog.askopenfilename(title=title, filetypes=filetypes, initialdir=initial_dir)
+    elif mode == "save":
+        return filedialog.asksaveasfilename(title=title, filetypes=filetypes, initialdir=initial_dir, defaultextension=defaultextension)
+    else:
+        raise ValueError("Invalid mode. Use 'open' or 'save'.")
+
+def open_image_dialogue():
+    return file_dialog(mode="open",
+                       initial_dir=".",
+                       filetypes=(("Images","*.png;*.jpg;*.jpeg"),("All files", "*.*"),),
+                       title="Open Image")
+
+def save_image_dialogue():
+    return file_dialog(mode="save",
+                       initial_dir=".",
+                       filetypes=(("Images","*.png;*.jpg;*.jpeg"),("All files", "*.*"),),
+                       title="Open Image")
+
 def get_unique_output_path(base_path):
     """
     Given a path like 'output/frame.png', returns a path like 'output/frame_000001.png'

@@ -1,10 +1,13 @@
 import cv2
 import numpy as np
 import os
+import sys
+sys.path.append('C:/Users/nullp/Projects/vision_pipe')
+from util.io import *
 
 # === Config ===
 WINDOW_NAME = "Mask Editor"
-DEFAULT_SIZE = (800, 600)  # width, height
+DEFAULT_SIZE = (1920, 1080)  # width, height
 FULLSCREEN_DEFAULT = False
 POINT_RADIUS = 4
 POINT_THICKNESS = -1
@@ -76,7 +79,7 @@ def render_mask():
 
 
 def main(image_path=None):
-    global fullscreen, points, shapes, current_color, invert_mask
+    global fullscreen, points, shapes, current_color, invert_mask, mask
 
     init_editor(image_path)
 
@@ -115,6 +118,17 @@ def main(image_path=None):
         elif key == ord('z'):  # Toggle invert mask
             invert_mask = not invert_mask
             print(f"Invert mask set to {invert_mask}")
+        elif key == ord('o'): #Open image
+            im_path = open_image_dialogue()
+            if im_path: mask = cv2.imread(im_path)
+        elif key == ord('s'): #Save image
+            im_path = save_image_dialogue()
+            if im_path: cv2.imwrite(im_path,mask)
+        elif key == ord('r'): # Reset / remove last shape
+            if len(points) > 0:
+                points.clear()
+            elif len(shapes) > 0:
+                shapes.pop()
 
     cv2.destroyAllWindows()
 

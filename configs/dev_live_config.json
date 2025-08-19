@@ -7,10 +7,11 @@
     "output_root": "C:/Users/nullp/Projects/vision_pipe/output",
     "output_label": "processed",
     "output_size": [640, 480],
-    "save_step_images": false,
+    "save_step_images": true,
     "numbered_files": false,
 
     "visualize": true,
+    "fullscreen": true,
     "window_name": "Pipe Test",
     "framerate": 100
   },
@@ -18,12 +19,16 @@
     "load_from_file": false,
     "pipe": [
     { "name": "GaussianBlur", "params": { "ksize": 7, "output_file": null}},
-    { "name": "Threshold", "params": { "thresh": 100, "max_val": 255, "output_file":"thresh.png"}},
+    { "name": "Threshold", "params": { "enabled": false,"thresh": 100, "max_val": 255, "output_file":"thresh.png"}},
+    { "name": "Invert", "params":{}},
     { "name": "GaussianBlur", "params": { "ksize": 7 }},
-    { "name": "Colorize", "params": { "colormap": "plasma", "output_file": "color.png"}},
+    { "name": "ColorShift", "params": { "shift": 35, "output_file": "color.png"}},
+    { "name": "AdjustBrightness", "beta": 1.0 },
+    { "name": "AdjustContrast", "alpha": 1.3 },
     {
     "name": "Resize",
     "params": {
+        "enabled": false,
         "size": [640, 480],
         "keep_aspect": true,
         "pad_color": [0, 0, 0], 

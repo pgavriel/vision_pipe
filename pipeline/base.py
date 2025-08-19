@@ -13,6 +13,7 @@ class PipelineStep:
         raise NotImplementedError("Must be implemented in subclass")
 
     def save_output(self, output_root, frame,numbered_files=False):
+        self.verbose = True
         output_file = self.params.get("output_file",None)
         if output_file and self.global_config["save_step_images"]:
             try:
