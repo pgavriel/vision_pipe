@@ -10,6 +10,7 @@ from util.io import open_input_stream, get_unique_output_path
 from pipeline.registry import create_step
 from util.profiler import PipelineProfiler
 from util.message_handler import MessageManager
+from tools.viewport_tool import Viewport, ViewportAnimator
 
 
 def load_pipeline(global_config, pipe_config, verbose=True):
@@ -62,6 +63,20 @@ def run_pipeline(config_path):
     msg = MessageManager()
     msg.add_message("status", "Startup successful...", duration=30, color=(0,255,0), size=1, position=(100,100))
 
+    # Get initial frame
+    while stream.is_open():
+        frame = stream.read()
+        h,w,_ = frame.shape
+        print(f"Stream Size: {w}x{h}")
+        break
+    # Setup Viewport
+    vp_step = 10
+    vp_mode = "relative"
+    vp = Viewport(frame,w//2,h//2,w,h)
+    vp.debug = False
+    vp.update()
+    vp_animator = ViewportAnimator()
+    vp_animator.update()
 
     cv_delay = 0 if cfg["input_type"] == "image" else 1
     save_frameset, save_screenshot = (False, False)
@@ -72,6 +87,13 @@ def run_pipeline(config_path):
         if frame is None:
             break
         
+        vp_animator.update()
+        if vp_animator.playing:
+            vp.set_state(vp_animator.current_state)
+        vp.image = frame
+        vp.update()
+        frame = vp.view
+
         # Apply all pipeline steps
         for step in steps:
             if not step.params.get("enabled",True):
@@ -96,7 +118,6 @@ def run_pipeline(config_path):
             save_screenshot = False
 
 
-        #TODO: apply viewport
         #TODO: resize final frame, implement different resize modes
         #TODO: Implement average framerate tracker/warning
 
@@ -112,15 +133,19 @@ def run_pipeline(config_path):
             # Handle GUI Controls
             key = cv2.waitKey(cv_delay) & 0xFF
             if key != 255: print(f"[{chr(key).center(3)} / {key}] pressed: ", end="")
+            # ==== QUIT ====
             if key == ord("q"):
                 print ("Quitting...")
                 break
+            # ==== SAVE OUTPUTS ====
+            # TODO: RECORD VIDEO
             elif key == ord("x"): # Save frameset
                 msg.add_message("status","Saving frameset...")
                 save_frameset = True
-            elif key == ord("s"): # Save screenshot
+            elif key == ord("z"): # Save screenshot
                 msg.add_message("status","Saving screenshot...")
-                save_screenshot = True    
+                save_screenshot = True   
+            # ==== CONFIGURE PIPELINE ====
             elif key == ord("1"): # Select previous step
                 if len(steps) > 0: 
                     # Select previous step
@@ -173,7 +198,7 @@ def run_pipeline(config_path):
                     param_name, param_val = list(steps[selected_step].params.items())[selected_param]
                     steps[selected_step].edit_parameter(param_name,"up",param_multipliers[current_param_multiplier])
                     msg.add_message("config",f"[Param {selected_param+1}/{len(steps[selected_step].params.keys())}] {param_name} = {param_val}",position=(10,100))
-            elif key == ord("7"):
+            elif key == ord("7"): # Cycle through param multipliers
                 current_param_multiplier = (current_param_multiplier + 1) % len(param_multipliers)
                 msg.add_message("config",f"[Param Multiplier]: {param_multipliers[current_param_multiplier]}",position=(10,100))
             elif key == ord("`"): # Toggle step "enabled" param
@@ -182,6 +207,43 @@ def run_pipeline(config_path):
                     steps[selected_step].params["enabled"] = not steps[selected_step].params.get("enabled",True)
                     step_enabled = steps[selected_step].params["enabled"]
                     msg.add_message("config",f"{step_name} enabled: {step_enabled}",position=(50,100))
+            # ==== VIEWPORT CONTROLS ====
+            elif key == ord("w"): # Viewport Up
+                vp.move("up",param_multipliers[current_param_multiplier],vp_mode)
+                print("[VP] Up")
+            elif key == ord("a"): # Viewport Left
+                vp.move("left",param_multipliers[current_param_multiplier],vp_mode)
+                print("[VP] Left")
+            elif key == ord("s"): # Viewport Down
+                vp.move("down",param_multipliers[current_param_multiplier],vp_mode)
+                print("[VP] Down")
+            elif key == ord("d"): # Viewport Right
+                vp.move("right",param_multipliers[current_param_multiplier],vp_mode)
+                print("[VP] Right")
+            elif key == ord("r"): # Viewport Zoom In
+                vp.h = int(max(vp.h * 0.9,10))
+                vp.w = int(max(vp.w * 0.9,10))
+                print("[VP] Zoom In: ",vp.w,vp.h)
+            elif key == ord("e"): # Viewport Zoom Out
+                vp.h = int(min(vp.h * 1.1,h))
+                vp.w = int(min(vp.w * 1.1,w))
+                print("[VP] Zoom Out: ",vp.w,vp.h)
+            elif key == ord("f"): # Viewport Rotate Left
+                vp.a = (vp.a + 15) % 360
+                print("[VP] Rotate Left: ",vp.a)
+            elif key == ord("c"): # Viewport Rotate Right
+                vp.a = (vp.a - 15) % 360
+                print("[VP] Rotate Right: ",vp.a)
+            elif key == ord('t'): # Viewport Reset
+                vp.reset()
+            elif key == ord('o'): # Viewport Animator - Add state
+                vp_animator.add_state(vp.get_state())
+            elif key == ord('p'): # Viewport Animator - Play/Pause
+                vp_animator.playpause()
+            elif key == ord('l'):# Viewport Animator - Reset
+                vp_animator.reset()
+                print("7. Animator reset")
+
 
         #TODO: export config file
 

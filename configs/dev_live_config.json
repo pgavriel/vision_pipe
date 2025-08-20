@@ -2,18 +2,17 @@
   "config": {
     "input_root": "C:/Users/nullp/Projects/vision_pipe/input",
     "input_type": "live",
-    "input_source": "0",
+    "input_source": "1",
     
     "output_root": "C:/Users/nullp/Projects/vision_pipe/output",
-    "output_label": "processed",
-    "output_size": [640, 480],
+    "screenshot_label": "v1",
     "save_step_images": true,
     "numbered_files": false,
 
     "visualize": true,
     "fullscreen": true,
     "window_name": "Pipe Test",
-    "framerate": 100
+    "framerate": 20
   },
   "pipe_config": {
     "load_from_file": false,
@@ -23,13 +22,20 @@
     { "name": "Invert", "params":{}},
     { "name": "GaussianBlur", "params": { "ksize": 7 }},
     { "name": "ColorShift", "params": { "shift": 35, "output_file": "color.png"}},
-    { "name": "AdjustBrightness", "beta": 1.0 },
-    { "name": "AdjustContrast", "alpha": 1.3 },
+    { "name": "AdjustBrightness", "params": { "beta": 1.0 } },
+    { "name": "AdjustContrast", "params": { "alpha": 1.3 } },
+    { 
+      "name": "Flip",
+      "params": {
+        "flip_x": false,
+        "flip_y": false
+      }
+    },
     {
     "name": "Resize",
     "params": {
-        "enabled": false,
-        "size": [640, 480],
+        "enabled": true,
+        "size": [1920, 1080],
         "keep_aspect": true,
         "pad_color": [0, 0, 0], 
         "output_file": "rs2.png"}
