@@ -29,6 +29,27 @@ class PipelineStep:
             except Exception as e:
                 print(f"[Warning] Exception while saving output to {output_file}: {e}")
 
+    def edit_parameter(self,param_name,direction,multiplier=1):
+        assert direction == "up" or direction == "down"
+        param = self.params.get(param_name,None)
+        if param is None:
+            print(f"ERROR: Editing unknown param: {param_name}")
+            return
+        if type(param) == bool:
+            self.params[param_name] = not self.params[param_name]
+        elif type(param) == int:
+            if direction == "up":
+                self.params[param_name] = int(self.params[param_name] + (1 * multiplier))
+            else:
+                self.params[param_name] = int(self.params[param_name] - (1 * multiplier))
+        elif type(param) == float:
+            if direction == "up":
+                self.params[param_name] = float(self.params[param_name] + (0.1 * multiplier))
+            else:
+                self.params[param_name] = float(self.params[param_name] - (0.1 * multiplier))
+        else:
+            print(f"ERROR: Editing unknown param type: {type(param)}")
+            
     def __repr__(self):
             classname = self.__class__.__name__
             param_str = ", ".join(f"{k}={v!r}" for k, v in self.params.items())

@@ -5,6 +5,21 @@ from .base import PipelineStep
 from .registry import register
 from util.image_utils import resize_image
 
+@register("Flip")
+class FlipStep(PipelineStep):
+    def apply(self, frame):
+        flip_x = self.params.get("flip_x",False)
+        flip_y = self.params.get("flip_y",False)
+        if not flip_x and not flip_y:
+            self.result = frame
+        elif flip_x and flip_y:
+            self.result = cv2.flip(frame,-1)
+        elif flip_x:
+            self.result = cv2.flip(frame,0)
+        else:# elif flip_y:
+            self.result = cv2.flip(frame,1)
+        return self.result
+
 @register("Blur")
 class BlurStep(PipelineStep):
     def apply(self, frame):

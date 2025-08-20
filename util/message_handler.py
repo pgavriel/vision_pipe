@@ -16,7 +16,7 @@ class MessageManager:
         self.frame_count = 0
         self.verbose = verbose
 
-    def add_message(self, name, text, duration=10, color=(0, 255, 255), size=1, position=(50, 50)):
+    def add_message(self, name, text, duration=25, color=(0, 255, 255), size=1, position=(10, 50)):
         """Add or overwrite a message with given name."""
         msg = Message(text, duration, color, size, position)
         msg.start_frame = self.frame_count
@@ -37,6 +37,9 @@ class MessageManager:
     def draw(self, frame, autostep=True):
         """Draw all active messages onto the given frame."""
         for msg in self.messages.values():
+            cv2.putText(frame, msg.text, (msg.position[0],msg.position[1]+2),
+                        cv2.FONT_HERSHEY_SIMPLEX, msg.size,
+                        (0,0,0), 2, cv2.LINE_AA)
             cv2.putText(frame, msg.text, msg.position,
                         cv2.FONT_HERSHEY_SIMPLEX, msg.size,
                         msg.color, 2, cv2.LINE_AA)
