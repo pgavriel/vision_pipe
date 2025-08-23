@@ -7,6 +7,7 @@ class PipelineStep:
     def __init__(self, global_config, **params):
         self.global_config = global_config
         self.params = params
+        self.name = "Unknown"
         self.verbose = True
 
     def apply(self, frame):
@@ -49,7 +50,18 @@ class PipelineStep:
                 self.params[param_name] = float(self.params[param_name] - (0.1 * multiplier))
         else:
             print(f"ERROR: Editing unknown param type: {type(param)}")
-            
+    
+    def to_dict(self):
+        param_dict = self.params
+        end_keys = ["output_file","enabled"]
+        for k in end_keys:
+            if k in param_dict:
+                temp = param_dict.pop(k)
+                param_dict[k] = temp
+        return {
+            "name": self.name,
+            "params": param_dict
+        }
     def __repr__(self):
             classname = self.__class__.__name__
             param_str = ", ".join(f"{k}={v!r}" for k, v in self.params.items())

@@ -9,7 +9,11 @@ def register(name):
 
 def create_step(name, global_config, params):
     cls = PIPELINE_REGISTRY.get(name)
+    
     if cls is None:
         raise ValueError(f"Unknown step: {name}")
-    return cls(global_config, **params)
+    
+    step = cls(global_config, **params)
+    step.name = name
+    return step#cls(global_config, **params)
 

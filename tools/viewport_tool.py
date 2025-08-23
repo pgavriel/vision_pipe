@@ -237,16 +237,16 @@ class ViewportAnimator:
                     direction = -1 if self.states[state_b][4] > self.states[state_a][4] else 1
                 else:
                     direction = -1 if self.states[state_a][4] > self.states[state_b][4] else 1
-                print("A:{} B:{} ABS:{} DIR:{}".format(self.states[state_a][4],self.states[state_b][4],abs_diff,direction))
+                if self.debug: print("A:{} B:{} ABS:{} DIR:{}".format(self.states[state_a][4],self.states[state_b][4],abs_diff,direction))
                 if abs_diff > 180:
                     state_delta.append(direction * (360 - abs_diff))
                 else:
                     state_delta.append(direction * abs_diff)
 
-                print("State Delta: {}".format(state_delta))
+                if self.debug: print("State Delta: {}".format(state_delta))
                 for i in range(5):
                     state_delta[i] = (state_delta[i] / self.steps[state_b]) * (step)
-                print("State Delta2: {}, step: {}".format(state_delta,(step)))
+                if self.debug: print("State Delta2: {}, step: {}".format(state_delta,(step)))
                 for i in range(5):
                     state_delta[i] = state_delta[i] + self.states[state_a][i]
                 self.current_state = state_delta

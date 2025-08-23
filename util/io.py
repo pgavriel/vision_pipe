@@ -44,6 +44,40 @@ def save_image_dialogue():
                        filetypes=(("Images","*.png;*.jpg;*.jpeg"),("All files", "*.*"),),
                        title="Open Image")
 
+def export_config(config: dict, current_config_path: str):
+    """
+    Export current configuration to a new JSON file.
+    
+    Args:
+        config (dict): The configuration dictionary to export.
+        current_config_path (str): Path of the currently loaded config file.
+    """
+
+    # Make sure Tk doesn't show the main window
+    root = tk.Tk()
+    root.withdraw()
+
+    # Build default filename
+    base, ext = os.path.splitext(os.path.basename(current_config_path))
+    default_filename = f"{base}_new.json"
+
+    # Open save file dialog
+    save_path = filedialog.asksaveasfilename(
+        initialdir=os.path.dirname(current_config_path),
+        initialfile=default_filename,
+        defaultextension=".json",
+        filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+    )
+
+    if save_path:
+        # Write JSON with indentation, preserve key order
+        with open(save_path, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+
+        print(f"Config exported to {save_path}")
+    else:
+        print("Export canceled.")
+
 def get_unique_output_path(base_path):
     """
     Given a path like 'output/frame.png', returns a path like 'output/frame_000001.png'

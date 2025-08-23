@@ -70,11 +70,15 @@ class AdjustContrastStep(PipelineStep):
 @register("ColorShift")
 class ColorShift(PipelineStep):
     def apply(self, frame):
-        hue_shift = self.params.get("shift", 90) % 360
+        hue_shift = self.params.get("hue_shift", 90) % 360
+        sat_shift = self.params.get("saturation_shift",0)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV).astype(np.float32)
 
         # Shift hue (OpenCV hue range is [0, 179], so scale down)
         hsv[..., 0] = (hsv[..., 0] + (hue_shift / 2)) % 180
+
+        # Adjust saturation
+        hsv[..., 1] = hsv[..., 1] + sat_shift
 
         hsv = np.clip(hsv, 0, 255).astype(np.uint8)
         self.result =  cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
@@ -99,6 +103,63 @@ class GaussianBlurStep(PipelineStep):
         self.result = cv2.GaussianBlur(frame, (ksize, ksize), 0)
         return self.result
 
+@register("Tile")
+class TileStep(PipelineStep):
+    def apply(self, frame):
+        n = max(1, int(self.params.get("n", 2)))
+        mirror = bool(self.params.get("mirror", False))
+        h, w = frame.shape[:2]
+
+        # Scale down to tile size
+        small = cv2.resize(frame, (w // n, h // n), interpolation=cv2.INTER_AREA)
+
+        # Create tiled canvas
+        tiled = np.zeros((h, w, 3), dtype=frame.dtype)
+
+        for row in range(n):
+            for col in range(n):
+                tile = small.copy()
+
+                if mirror:
+                    # Flip horizontally if col is odd
+                    if col % 2 == 1:
+                        tile = cv2.flip(tile, 1)
+                    # Flip vertically if row is odd
+                    if row % 2 == 1:
+                        tile = cv2.flip(tile, 0)
+
+                # Place tile in the right spot
+                y0, y1 = row * (h // n), (row + 1) * (h // n)
+                x0, x1 = col * (w // n), (col + 1) * (w // n)
+                tiled[y0:y1, x0:x1] = tile
+
+        self.result = tiled
+        return self.result
+    
+
+@register("Border")
+class Border(PipelineStep):
+    def apply(self, frame):
+        width = self.params.get("width", 20)
+        color = self.params.get("color", [0, 0, 0])  # default black BGR
+
+        # Ensure color is in BGR list form
+        if isinstance(color, tuple):
+            color = list(color)
+        if len(color) != 3:
+            color = [0, 0, 0]
+
+        self.result = cv2.copyMakeBorder(
+            frame,
+            top=width,
+            bottom=width,
+            left=width,
+            right=width,
+            borderType=cv2.BORDER_CONSTANT,
+            value=color
+        )
+        return self.result
+    
 @register("Resize")
 class ResizeStep(PipelineStep):
     """ TEMPLATE
@@ -117,3 +178,32 @@ class ResizeStep(PipelineStep):
         pad_color = tuple(self.params.get("pad_color", [0, 0, 0]))
         result = resize_image(frame, size, keep_aspect, pad_color)
         return result
+
+# TODO: add automatic inference of the input_type (e.g., detect if the frame has 1 vs 3 channels, so you don’t have to specify it manually
+@register("ColorConvert")   
+class ColorConvertStep(PipelineStep):
+    COLOR_MAP = {
+        ("bgr", "gray"): cv2.COLOR_BGR2GRAY,
+        ("bgr", "rgb"): cv2.COLOR_BGR2RGB,
+        ("bgr", "hsv"): cv2.COLOR_BGR2HSV,
+        ("rgb", "bgr"): cv2.COLOR_RGB2BGR,
+        ("rgb", "gray"): cv2.COLOR_RGB2GRAY,
+        ("rgb", "hsv"): cv2.COLOR_RGB2HSV,
+        ("hsv", "bgr"): cv2.COLOR_HSV2BGR,
+        ("hsv", "rgb"): cv2.COLOR_HSV2RGB,
+        ("gray", "bgr"): cv2.COLOR_GRAY2BGR,
+        ("gray", "rgb"): cv2.COLOR_GRAY2RGB,
+    }
+
+    def apply(self, frame):
+        input_type = self.params.get("input_type", "bgr").lower()
+        output_type = self.params.get("output_type", "gray").lower()
+
+        if (input_type, output_type) not in self.COLOR_MAP:
+            raise ValueError(
+                f"Unsupported color conversion: {input_type} -> {output_type}"
+            )
+
+        code = self.COLOR_MAP[(input_type, output_type)]
+        self.result = cv2.cvtColor(frame, code)
+        return self.result

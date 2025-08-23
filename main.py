@@ -6,11 +6,12 @@ from os.path import join, dirname
 import os
 from pipeline.registry import create_step
 import pipeline.filters
-from util.io import open_input_stream, get_unique_output_path
+from util.io import open_input_stream, get_unique_output_path, export_config
 from pipeline.registry import create_step
 from util.profiler import PipelineProfiler
 from util.message_handler import MessageManager
 from tools.viewport_tool import Viewport, ViewportAnimator
+from tools.obs_controller import OBSController
 
 
 def load_pipeline(global_config, pipe_config, verbose=True):
@@ -62,6 +63,9 @@ def run_pipeline(config_path):
     # Setup text message handler
     msg = MessageManager()
     msg.add_message("status", "Startup successful...", duration=30, color=(0,255,0), size=1, position=(100,100))
+
+    # Setup OBS Websocket controller (for recording video)
+    obs = OBSController(password="visionpipe")
 
     # Get initial frame
     while stream.is_open():
@@ -138,13 +142,19 @@ def run_pipeline(config_path):
                 print ("Quitting...")
                 break
             # ==== SAVE OUTPUTS ====
-            # TODO: RECORD VIDEO
             elif key == ord("x"): # Save frameset
                 msg.add_message("status","Saving frameset...")
                 save_frameset = True
             elif key == ord("z"): # Save screenshot
                 msg.add_message("status","Saving screenshot...")
                 save_screenshot = True   
+            elif key == ord("m"): # Start/Stop Recording Video
+                obs.toggle_recording()
+                # print(obs.get_recording_status())
+            elif key == ord("n"): # Save current config
+                pipe_cfg = {"load_from_file": False, "pipe":[step.to_dict() for step in steps]}
+                out_cfg = {"config":cfg,"pipe_config":pipe_cfg}
+                export_config(out_cfg,config_path)
             # ==== CONFIGURE PIPELINE ====
             elif key == ord("1"): # Select previous step
                 if len(steps) > 0: 
@@ -201,6 +211,22 @@ def run_pipeline(config_path):
             elif key == ord("7"): # Cycle through param multipliers
                 current_param_multiplier = (current_param_multiplier + 1) % len(param_multipliers)
                 msg.add_message("config",f"[Param Multiplier]: {param_multipliers[current_param_multiplier]}",position=(10,100))
+            elif key == ord("8"): # Move step BACKWARD in list
+                if selected_step > 0:
+                    temp = steps[selected_step-1]
+                    steps[selected_step-1] = steps[selected_step]
+                    steps[selected_step] = temp
+                    selected_step = selected_step - 1
+                    step_name = steps[selected_step].__class__.__name__
+                    msg.add_message("status",f"[Step {selected_step+1}/{len(steps)}] {step_name}")
+            elif key == ord("9"): # Move step FORWARD in list
+                if selected_step < len(steps)-1:
+                    temp = steps[selected_step+1]
+                    steps[selected_step+1] = steps[selected_step]
+                    steps[selected_step] = temp
+                    selected_step = selected_step + 1
+                    step_name = steps[selected_step].__class__.__name__
+                    msg.add_message("status",f"[Step {selected_step+1}/{len(steps)}] {step_name}")
             elif key == ord("`"): # Toggle step "enabled" param
                 if len(steps) > 0:
                     step_name = steps[selected_step].__class__.__name__
@@ -237,7 +263,7 @@ def run_pipeline(config_path):
             elif key == ord('t'): # Viewport Reset
                 vp.reset()
             elif key == ord('o'): # Viewport Animator - Add state
-                vp_animator.add_state(vp.get_state())
+                vp_animator.add_state(vp.get_state(),steps=75)
             elif key == ord('p'): # Viewport Animator - Play/Pause
                 vp_animator.playpause()
             elif key == ord('l'):# Viewport Animator - Reset
@@ -253,7 +279,7 @@ def run_pipeline(config_path):
 
 if __name__ == "__main__":
     root_directory = pathlib.Path(__file__).parent.resolve()
-    config_file = root_directory / "configs" / "dev_live_config.json"
+    config_file = root_directory / "configs" / "dev_live_config_new.json"
     if config_file.resolve().exists():
         print(f"=====\nRunning Config: {config_file}")
         run_pipeline(config_file)
