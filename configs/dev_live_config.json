@@ -1,45 +1,152 @@
 {
-  "config": {
-    "input_root": "C:/Users/nullp/Projects/vision_pipe/input",
-    "input_type": "live",
-    "input_source": "1",
-    
-    "output_root": "C:/Users/nullp/Projects/vision_pipe/output",
-    "screenshot_label": "v1",
-    "save_step_images": true,
-    "numbered_files": false,
-
-    "visualize": true,
-    "fullscreen": true,
-    "window_name": "Pipe Test",
-    "framerate": 20
-  },
-  "pipe_config": {
-    "load_from_file": false,
-    "pipe": [
-    { "name": "GaussianBlur", "params": { "ksize": 7, "output_file": null}},
-    { "name": "Threshold", "params": { "enabled": false,"thresh": 100, "max_val": 255, "output_file":"thresh.png"}},
-    { "name": "Invert", "params":{}},
-    { "name": "GaussianBlur", "params": { "ksize": 7 }},
-    { "name": "ColorShift", "params": { "shift": 35, "output_file": "color.png"}},
-    { "name": "AdjustBrightness", "params": { "beta": 1.0 } },
-    { "name": "AdjustContrast", "params": { "alpha": 1.3 } },
-    { 
-      "name": "Flip",
-      "params": {
-        "flip_x": false,
-        "flip_y": false
-      }
+    "config": {
+        "input_root": "C:/Users/nullp/Projects/vision_pipe/input",
+        "input_type": "live",
+        "input_source": "0",
+        "output_root": "C:/Users/nullp/Projects/vision_pipe/output",
+        "screenshot_label": "v1",
+        "screenshot_rotations": 0,
+        "save_step_images": true,
+        "numbered_files": false,
+        "visualize": true,
+        "fullscreen": true,
+        "window_name": "Pipe Test",
+        "framerate": 20
     },
-    {
-    "name": "Resize",
-    "params": {
-        "enabled": true,
-        "size": [1920, 1080],
-        "keep_aspect": true,
-        "pad_color": [0, 0, 0], 
-        "output_file": "rs2.png"}
+    "pipe_config": {
+        "load_from_file": false,
+        "pipe": [
+            {
+                "name": "GaussianBlur",
+                "params": {
+                    "ksize": 2,
+                    "output_file": null,
+                    "enabled": true
+                }
+            },
+            {
+                "name": "Resize",
+                "params": {
+                    "size": [
+                        64,
+                        36
+                    ],
+                    "keep_aspect": true,
+                    "pad_color": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "output_file": "rs2.png",
+                    "enabled": false
+                }
+            },
+            {
+                "name": "AdjustBrightness",
+                "params": {
+                    "beta": -26.0,
+                    "enabled": true
+                }
+            },
+            {
+                "name": "Threshold",
+                "params": {
+                    "thresh": 100,
+                    "max_val": 255,
+                    "output_file": "thresh.png",
+                    "enabled": false
+                }
+            },
+            {
+                "name": "Invert",
+                "params": {
+                    "enabled": false
+                }
+            },
+            {
+                "name": "ColorShift",
+                "params": {
+                    "hue_shift": 42,
+                    "saturation_shift": -40,
+                    "output_file": "color.png",
+                    "enabled": true
+                }
+            },
+            {
+                "name": "AdjustContrast",
+                "params": {
+                    "alpha": 1.3,
+                    "enabled": false
+                }
+            },
+            {
+                "name": "GaussianBlur",
+                "params": {
+                    "ksize": 7,
+                    "enabled": false
+                }
+            },
+            {
+                "name": "Flip",
+                "params": {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "enabled": true
+                }
+            },
+            {
+                "name": "Tile",
+                "params": {
+                    "n": 2,
+                    "downscale": true,
+                    "mirror": true,
+                    "enabled": true
+                }
+            },
+            {
+                "name": "Layer",
+                "params": {
+                    "source": "abs.png",
+                    "position": {
+                        "mode":"random",
+                        "points":[[0.5,0.2],[0.5,0.8]],
+                        "speed": 10,
+                        "interpolation": "sine"
+                    },
+                    "scale": 0.5,
+                    "rotation": 180,
+                    "opacity": 0.9
+                }
+            },
+            {
+                "name": "Border",
+                "params": {
+                    "width": 20,
+                    "color": [
+                        255,
+                        255,
+                        255
+                    ],
+                    "enabled": false
+                }
+            },
+            {
+                "name": "Resize",
+                "params": {
+                    "size": [
+                        1920,
+                        1080
+                    ],
+                    "keep_aspect": false,
+                    "pad_color": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "output_file": "rs2.png",
+                    "enabled": true
+                }
+            }
+        ]
     }
-  ]
-  }
 }

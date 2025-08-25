@@ -19,7 +19,7 @@ class PipelineProfiler:
         self.frame_times.append(total_time)
         self.frame_count += 1
 
-        if self.frame_count % self.print_interval == 0:
+        if self.frame_count % self.print_interval == 0 or self.frame_count == self.window_size:
             self._print_summary()
 
     def start_step(self, step_name):

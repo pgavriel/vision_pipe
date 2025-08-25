@@ -6,6 +6,7 @@ from os.path import join, dirname
 import os
 from pipeline.registry import create_step
 import pipeline.filters
+import pipeline.layer
 from util.io import open_input_stream, get_unique_output_path, export_config
 from pipeline.registry import create_step
 from util.profiler import PipelineProfiler
@@ -113,12 +114,20 @@ def run_pipeline(config_path):
             profiler.end_step()
         save_frameset = False
         
+
         #TODO: create write final frame function, which also handles recording
         if save_screenshot:
             # write numbered frame
             out_path = get_unique_output_path(join(cfg["output_root"],f"screenshots/{cfg['screenshot_label']}.png"))
             os.makedirs(dirname(out_path), exist_ok=True)
-            cv2.imwrite(out_path,frame)
+            ss_frame = frame.copy()
+            if cfg["screenshot_rotations"] != 0:
+                rotate = cv2.ROTATE_90_COUNTERCLOCKWISE
+                if cfg["screenshot_rotations"]%4 == 1: rotate = cv2.ROTATE_90_CLOCKWISE
+                elif cfg["screenshot_rotations"]%4 == 2: rotate = cv2.ROTATE_180
+                print(f"SS: {cfg['screenshot_rotations']} -- {rotate}")
+                ss_frame = cv2.rotate(ss_frame,rotate)
+            cv2.imwrite(out_path,ss_frame)
             save_screenshot = False
 
 

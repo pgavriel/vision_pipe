@@ -108,13 +108,18 @@ class TileStep(PipelineStep):
     def apply(self, frame):
         n = max(1, int(self.params.get("n", 2)))
         mirror = bool(self.params.get("mirror", False))
+        downscale = self.params.get("downscale",True)
         h, w = frame.shape[:2]
 
-        # Scale down to tile size
-        small = cv2.resize(frame, (w // n, h // n), interpolation=cv2.INTER_AREA)
-
+        
         # Create tiled canvas
-        tiled = np.zeros((h, w, 3), dtype=frame.dtype)
+        if downscale:
+            # Scale down to tile size
+            small = cv2.resize(frame, (w // n, h // n), interpolation=cv2.INTER_AREA)
+            tiled = np.zeros((h, w, 3), dtype=frame.dtype)
+        else:
+            small = frame
+            tiled = np.zeros((h*n, w*n, 3), dtype=frame.dtype)
 
         for row in range(n):
             for col in range(n):
@@ -129,9 +134,14 @@ class TileStep(PipelineStep):
                         tile = cv2.flip(tile, 0)
 
                 # Place tile in the right spot
-                y0, y1 = row * (h // n), (row + 1) * (h // n)
-                x0, x1 = col * (w // n), (col + 1) * (w // n)
+                if downscale:
+                    y0, y1 = row * (h // n), (row + 1) * (h // n)
+                    x0, x1 = col * (w // n), (col + 1) * (w // n)
+                else:
+                    y0, y1 = row * (h), (row + 1) * (h)
+                    x0, x1 = col * (w ), (col + 1) * (w)
                 tiled[y0:y1, x0:x1] = tile
+                    
 
         self.result = tiled
         return self.result
